@@ -1,6 +1,6 @@
 # Any Router 多账号自动签到
 
-多平台多账号自动签到，理论上支持所有 NewApi、OneApi 平台，目前内置支持 Any Router 与 Agent Router，其它可根据文档进行摸索配置。
+多平台多账号自动签到，理论上支持所有 NewAPI、OneAPI 平台，目前内置支持 Any Router 与 Agent Router，其它可根据文档进行摸索配置。
 
 推荐搭配使用[Auo](https://github.com/millylee/auo)，支持任意 Claude Code Token 切换的工具。
 
@@ -10,6 +10,7 @@
 
 ## 功能特性
 
+- ✅ 多平台（兼容 NewAPI 与 OneAPI）
 - ✅ 单个/多账号自动签到
 - ✅ 多种机器人通知（可选）
 - ✅ 绕过 WAF 限制
@@ -24,7 +25,7 @@
 
 对于每个需要签到的账号，你需要获取：
 1. **Cookies**: 用于身份验证
-2. **API User**: 用于请求头的 new-api-user 参数
+2. **API User**: 用于请求头的 new-api-user 参数（自己配置其它平台时该值需要注意匹配）
 
 #### 获取 Cookies：
 1. 打开浏览器，访问 https://anyrouter.top/
@@ -35,7 +36,7 @@
 6. 复制所有 cookies
 
 #### 获取 API User：
-通常在网站的用户设置或 API 设置中可以找到，每个账号都有唯一的标识。
+按照下方图片教程操作获得。
 
 ### 3. 设置 GitHub Environment Secret
 
@@ -172,7 +173,7 @@
 
 ## 自定义 Provider 配置（可选）
 
-默认情况下，`anyrouter` 已内置配置，无需额外设置。如果你需要使用其他服务商，可以通过环境变量 `PROVIDERS` 配置：
+默认情况下，`anyrouter`、`agentrouter` 已内置配置，无需额外设置。如果你需要使用其他服务商，可以通过环境变量 `PROVIDERS` 配置：
 
 ### 基础配置（仅域名）
 
@@ -180,9 +181,6 @@
 
 ```json
 {
-  "agentrouter": {
-    "domain": "https://agentrouter.org"
-  },
   "customrouter": {
     "domain": "https://custom.example.com"
   }
@@ -200,8 +198,9 @@
     "login_path": "/auth/login",
     "sign_in_path": "/api/checkin",
     "user_info_path": "/api/profile",
-    "api_user_key": "x-user-id",
-    "bypass_method": "waf_cookies"
+    "api_user_key": "New-Api-User",
+    "bypass_method": "waf_cookies",
+    "waf_cookie_names": ["acw_tc", "cdn_sec_tc", "acw_sc__v2"]
   }
 }
 ```
@@ -228,6 +227,7 @@
 - `bypass_method` (可选)：WAF 绕过方法
   - `"waf_cookies"`：使用 Playwright 打开浏览器获取 WAF cookies 后再执行签到
   - 不设置或 `null`：直接使用用户 cookies 执行签到（适合无 WAF 保护的网站）
+- `waf_cookie_names` (可选)：绕过 WAF 所需 cookie 的名称列表，`bypass_method` 为 `waf_cookies` 时必须设置
 
 **配置示例**（完整）：
 ```json
@@ -259,9 +259,10 @@
 
 脚本支持多种通知方式，可以通过配置以下环境变量开启，如果 `webhook` 有要求安全设置，例如钉钉，可以在新建机器人时选择自定义关键词，填写 `AnyRouter`。
 
-### 邮箱通知
-- `EMAIL_USER`: 发件人邮箱地址
+### 邮箱通知(STMP)
+- `EMAIL_USER`: 发件人邮箱地址/STMP登录地址
 - `EMAIL_PASS`: 发件人邮箱密码/授权码
+- `EMAIL_SENDER`: 邮件显示的发件人地址(可选，默认: EMAIL_USER)
 - `CUSTOM_SMTP_SERVER`: 自定义发件人SMTP服务器(可选)
 - `EMAIL_TO`: 收件人邮箱地址
 ### 钉钉机器人
@@ -278,6 +279,15 @@
 
 ### Server酱
 - `SERVERPUSHKEY`: Server酱的 SendKey
+
+### Telegram Bot
+- `TELEGRAM_BOT_TOKEN`: Telegram Bot 的 Token
+- `TELEGRAM_CHAT_ID`: Telegram Chat ID
+
+### Gotify 推送
+- `GOTIFY_URL`: Gotify 服务的 URL 地址（例如: https://your-gotify-server/message）
+- `GOTIFY_TOKEN`: Gotify 应用的访问令牌
+- `GOTIFY_PRIORITY`: Gotify 消息优先级 (1-10, 默认为 9)
 
 配置步骤：
 1. 在仓库的 Settings -> Environments -> production -> Environment secrets 中添加上述环境变量
